@@ -121,7 +121,8 @@ function hello() {
 De app bestaat alleen uit statische bestanden en draait dus direct op GitHub Pages:
 
 1. Maak een (publieke) repository op GitHub en zet deze bestanden in de hoofdmap:
-   `index.html`, `app.js`, `word-import.js`, `styles.css`, `README.md`, `.nojekyll`
+   `index.html`, `app.js`, `word-import.js`, `styles.css`, `README.md`, `.nojekyll`,
+   `favicon.svg`, `favicon.ico` en `apple-touch-icon.png`
 2. Ga in de repository naar **Settings → Pages**
 3. Kies bij *Source* voor **Deploy from a branch**, branch `main`, map `/ (root)`, en klik op **Save**
 4. Na een minuut staat de app op `https://<gebruikersnaam>.github.io/<repository>/`

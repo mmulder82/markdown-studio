@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#007aff"/>
+  <!-- Markdown-teken "M↓" -->
+  <g transform="translate(-0.25 12.8) scale(0.3)" fill="#fff">
+    <path d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39z"/>
+    <path d="M155 98l-30-33h20V30h20v35h20z"/>
+  </g>
+</svg>

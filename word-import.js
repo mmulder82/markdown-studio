@@ -22,6 +22,7 @@
         // Inhoudsopgave overslaan: paginanummers zijn ruis voor een AI.
         "p[style-name='TOC Heading'] => !",
         "p[style-name='Kop van inhoudsopgave'] => !",
+        "p[style-name='stlToC'] => !", // huisstijl Gooise Meren
     ];
     for (const name of ['toc', 'TOC', 'Inhopg']) {
         for (let i = 1; i <= 9; i++) STYLE_MAP.push(`p[style-name='${name} ${i}'] => !`);
@@ -71,6 +72,26 @@
         return m ? (m[1] === 'end' ? 'e' : '') + m[2] : null;
     }
 
+    // Witruimte en regeleinden aan de randen buiten de vet/cursief-markering zetten.
+    // Anders wordt bijv. "Privacy" + regeleinde (Shift+Enter) in Word "**Privacy  \n**",
+    // en dat herkent geen enkele Markdown-lezer meer als vet.
+    function wrapInline(content, delimiter) {
+        const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(content);
+        if (!m[2]) return content;
+        return m[1] + delimiter + m[2] + delimiter + m[3];
+    }
+
+    // Tabelcel naar één regel: alinea's en regeleinden worden <br>.
+    function flattenCell(md) {
+        return md
+            .replace(/ *\n{2,} */g, '<br>')
+            .replace(/ {2,}\n/g, '<br>')
+            .replace(/\s*\n\s*/g, ' ')
+            .replace(/^(?:<br>)+|(?:<br>)+$/g, '')
+            .replace(/\|/g, '\\|')
+            .trim();
+    }
+
     function createTurndown(TurndownService) {
         const td = new TurndownService({
             headingStyle: 'atx',
@@ -82,9 +103,19 @@
         td.escape = escapeMarkdown;
         let cellService = null; // voor de inhoud van tabelcellen
 
+        td.addRule('strong', {
+            filter: ['strong', 'b'],
+            replacement: (content, node, options) => wrapInline(content, options.strongDelimiter),
+        });
+
+        td.addRule('emphasis', {
+            filter: ['em', 'i'],
+            replacement: (content, node, options) => wrapInline(content, options.emDelimiter),
+        });
+
         td.addRule('strikethrough', {
             filter: ['s', 'del', 'strike'],
-            replacement: (content) => (content.trim() ? `~~${content}~~` : content),
+            replacement: (content) => wrapInline(content, '~~'),
         });
 
         // Afbeeldingen: alleen de alt-tekst bewaren.
@@ -153,29 +184,32 @@
                 };
                 collect(node);
 
+                // Per cel de Markdown; samengevoegde cellen (colspan) krijgen lege opvulcellen.
                 let grid = rows.map((tr) => {
                     const cells = [];
                     for (const cell of Array.from(tr.childNodes)) {
                         if (cell.nodeName !== 'TD' && cell.nodeName !== 'TH') continue;
-                        const md = cellService.turndown(cell.innerHTML)
-                            .replace(/\n{2,}/g, '<br>')
-                            .replace(/\n/g, ' ')
-                            .replace(/\|/g, '\\|')
-                            .trim();
-                        cells.push(md);
+                        cells.push(cellService.turndown(cell.innerHTML).trim());
                         const span = Number(cell.getAttribute('colspan') || 1);
                         for (let i = 1; i < span; i++) cells.push('');
                     }
                     return cells;
                 });
-                // Lege kopregel? Dan wordt de volgende rij de kop.
-                while (grid.length > 1 && grid[0].every((c) => !c)) grid.shift();
-                if (!grid.length) return '';
-
-                const cols = Math.max(...grid.map((r) => r.length));
+                const cols = Math.max(0, ...grid.map((r) => r.length));
                 grid = grid.map((r) => r.concat(Array(cols - r.length).fill('')));
+
+                // Lege rijen en kolommen weglaten (vaak opmaak-/witruimte in Word).
+                grid = grid.filter((r) => r.some((c) => c));
+                const keep = [...Array(cols).keys()].filter((i) => grid.some((r) => r[i]));
+                grid = grid.map((r) => keep.map((i) => r[i]));
+                if (!grid.length || !keep.length) return '';
+
+                // Tabel met één kolom = opmaaktabel (bijv. titel op het voorblad): gewone tekst.
+                if (keep.length === 1) return '\n\n' + grid.map((r) => r[0]).join('\n\n') + '\n\n';
+
+                grid = grid.map((r) => r.map(flattenCell));
                 const line = (r) => '| ' + r.join(' | ') + ' |';
-                const out = [line(grid[0]), '|' + ' --- |'.repeat(cols), ...grid.slice(1).map(line)];
+                const out = [line(grid[0]), '|' + ' --- |'.repeat(keep.length), ...grid.slice(1).map(line)];
                 return '\n\n' + out.join('\n') + '\n\n';
             },
         });
@@ -189,6 +223,9 @@
             .replace(/(\S)[ \t]{2,}/g, '$1 ')  // dubbele spaties midden in een regel
             .replace(/\n{3,}/g, '\n\n')        // max. één lege regel
             .replace(/^(#{1,6} \d+)\\\. /gm, '$1. ') // "# 1\. Doel" -> "# 1. Doel" (in een kop onnodig)
+            // Aangrenzende stukken met dezelfde opmaak samenvoegen: "*Soms is dit* *onrechtmatig*" -> "*Soms is dit onrechtmatig*"
+            .replace(/([^\s*\\])\*\* \*\*(?=[^\s*])/g, '$1 ')
+            .replace(/([^\s*\\])\* \*(?=[^\s*])/g, '$1 ')
             // Losse regel direct gevolgd door een kop met dezelfde tekst (bijv. een ondertitel-label).
             .replace(/^(?:#+ )?(.+)\n\n(#+ \1)$/gm, '$2')
             .trim() + '\n';
