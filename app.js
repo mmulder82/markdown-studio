@@ -26,6 +26,10 @@ const fileNameDisplay = document.getElementById('file-name');
 const viewToggle = document.getElementById('view-toggle');
 const viewModeText = document.getElementById('view-mode-text');
 const saveFileBtn = document.getElementById('save-file');
+const importWordBtn = document.getElementById('import-word');
+const wordInput = document.getElementById('word-input');
+const copyMarkdownBtn = document.getElementById('copy-markdown');
+const toast = document.getElementById('toast');
 
 // View modes: 'split', 'editor', 'preview'
 let viewMode = 'split';
@@ -154,8 +158,11 @@ function showEditor(markdown = '', fileName = 'Untitled.md') {
     setViewMode('split');
     updatePreview();
 
-    // Focus editor
+    // Focus editor, met de cursor (en scrollpositie) aan het begin van het document
+    markdownEditor.setSelectionRange(0, 0);
     markdownEditor.focus();
+    markdownEditor.scrollTop = 0;
+    previewPane.scrollTop = 0;
 }
 
 function hideEditor() {
@@ -229,9 +236,55 @@ function formatDate(dateString) {
     return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
 }
 
+// Korte melding onderin beeld
+let toastTimer = null;
+function showToast(message, { error = false, duration = 3000 } = {}) {
+    clearTimeout(toastTimer);
+    toast.textContent = message;
+    toast.classList.toggle('error', error);
+    toast.classList.add('visible');
+    if (duration) {
+        toastTimer = setTimeout(() => toast.classList.remove('visible'), duration);
+    }
+}
+
+// Word-document (.docx) omzetten naar Markdown en openen in de editor
+let isImporting = false;
+async function importWordFile(file) {
+    if (isImporting) return;
+    isImporting = true;
+    showToast(`"${file.name}" wordt omgezet…`, { duration: 0 });
+    try {
+        const { markdown } = await WordImport.convertDocx(file);
+        const mdName = file.name.replace(/\.docx?$/i, '') + '.md';
+
+        currentFileHandle = null; // opslaan = downloaden als nieuw .md-bestand
+        showEditor(markdown, mdName);
+        addToRecentFiles(file.name, mdName);
+        showToast(`Omgezet uit Word: ${markdown.length.toLocaleString('nl-NL')} tekens. Kopieer of sla op als .md.`, { duration: 5000 });
+    } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Omzetten mislukt', { error: true, duration: 7000 });
+    } finally {
+        isImporting = false;
+    }
+}
+
+function isWordFile(file) {
+    return /\.docx?$/i.test(file.name);
+}
+
+function isMarkdownFile(file) {
+    return /\.(md|markdown)$/i.test(file.name);
+}
+
 function handleFile(file) {
-    if (!file.name.match(/\.(md|markdown)$/i)) {
-        alert('Selecteer alsjeblieft een .md of .markdown bestand');
+    if (isWordFile(file)) {
+        importWordFile(file);
+        return;
+    }
+    if (!isMarkdownFile(file)) {
+        alert('Selecteer alsjeblieft een .md-, .markdown- of Word-bestand (.docx)');
         return;
     }
 
@@ -392,6 +445,34 @@ saveFileBtn.addEventListener('click', () => {
     saveFile();
 });
 
+importWordBtn.addEventListener('click', () => {
+    wordInput.click();
+});
+
+wordInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        importWordFile(file);
+    }
+    wordInput.value = ''; // zelfde bestand later opnieuw kunnen kiezen
+});
+
+// Markdown kopiëren (bijv. om in een AI-chat te plakken)
+copyMarkdownBtn.addEventListener('click', async () => {
+    const text = markdownEditor.value;
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (err) {
+        // Terugval voor browsers zonder Clipboard API
+        markdownEditor.select();
+        document.execCommand('copy');
+        markdownEditor.setSelectionRange(0, 0);
+    }
+    const label = copyMarkdownBtn.querySelector('span');
+    label.textContent = 'Gekopieerd!';
+    setTimeout(() => { label.textContent = 'Kopiëren'; }, 1500);
+});
+
 // Live preview
 markdownEditor.addEventListener('input', () => {
     updatePreview();
@@ -429,6 +510,7 @@ dropZone.addEventListener('dragleave', (e) => {
 
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
+    e.stopPropagation(); // anders verwerkt de document-handler hieronder het bestand nog een keer
     dropZone.classList.remove('drag-over');
 
     const file = e.dataTransfer.files[0];
@@ -445,7 +527,7 @@ document.addEventListener('dragover', (e) => {
 document.addEventListener('drop', (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && file.name.match(/\.(md|markdown)$/i)) {
+    if (file && (isMarkdownFile(file) || isWordFile(file))) {
         handleFile(file);
     }
 });

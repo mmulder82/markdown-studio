@@ -31,12 +31,21 @@
                 Nieuw Bestand
             </button>
 
-            <button id="open-file" class="secondary-button">
+            <button id="open-file" class="secondary-button tight">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M2 2a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm2 0v12h8V2H4z"/>
                     <path d="M6 4h4v1H6V4zm0 2h4v1H6V6zm0 2h4v1H6V8z"/>
                 </svg>
                 Open MD Bestand
+            </button>
+
+            <button id="import-word" class="secondary-button" title="Zet een Word-document (.docx) om naar Markdown">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <polyline points="8 13 9.5 18 12 14 14.5 18 16 13"></polyline>
+                </svg>
+                Word importeren
             </button>
 
             <div class="recent-files">
@@ -53,6 +62,13 @@
                     <span id="file-name" class="file-name-display">Untitled.md</span>
                 </div>
                 <div class="toolbar-right">
+                    <button id="copy-markdown" class="toolbar-button" title="Kopieer de Markdown, bijvoorbeeld om in een AI-chat te plakken">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Kopiëren</span>
+                    </button>
                     <button id="view-toggle" class="toolbar-button" title="Toggle view mode">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -77,8 +93,9 @@
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                         <polyline points="13 2 13 9 20 9"></polyline>
                     </svg>
-                    <h2>Sleep een .md bestand hierheen</h2>
-                    <p>of klik op "Nieuw Bestand" om te beginnen met schrijven</p>
+                    <h2>Sleep een .md- of Word-bestand hierheen</h2>
+                    <p>Word-documenten (.docx) worden omgezet naar Markdown, zodat AI ze makkelijk kan lezen.<br>
+                    Dat gebeurt in je eigen browser: het document wordt nergens naartoe gestuurd.</p>
                 </div>
             </div>
 
@@ -95,7 +112,11 @@
     </div>
 
     <input type="file" id="file-input" accept=".md,.markdown" style="display: none;">
+    <input type="file" id="word-input" accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;">
 
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="word-import.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

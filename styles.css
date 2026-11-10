@@ -129,6 +129,10 @@ body {
     margin-bottom: 24px;
 }
 
+.secondary-button.tight {
+    margin-bottom: 12px;
+}
+
 .secondary-button:hover {
     background-color: var(--bg-secondary);
     border-color: var(--accent-color);
@@ -249,6 +253,40 @@ body {
 .toolbar-button.primary:hover {
     background-color: var(--accent-hover);
     border-color: var(--accent-hover);
+}
+
+/* Toast-melding (bijv. bij Word-import) */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 16px);
+    max-width: min(560px, calc(100vw - 32px));
+    padding: 12px 18px;
+    border-radius: 10px;
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    font-size: 14px;
+    box-shadow: 0 8px 24px var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.toast.error {
+    background-color: #d70015;
+    color: #fff;
+}
+
+.drop-zone-content p {
+    max-width: 520px;
+    margin: 0 auto;
 }
 
 /* Drop zone */

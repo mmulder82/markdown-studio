@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Lokale instellingen van Claude Code / editors
+.claude/
+.vscode/
+.idea/
+
+# Veiligheidsnet: de repository is openbaar (GitHub Pages).
+# Zet nooit documenten in deze map die niet openbaar mogen worden.
+*.docx
+*.doc
+*.pdf
+*.xlsx
+*.xls
+*.pptx
+~$*
