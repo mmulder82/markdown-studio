@@ -6,6 +6,13 @@
  * van een CDN geladen.
  *
  * Werkt ook in Node (voor tests): require('./word-import.js').convertWithLibs(...)
+ *
+ * Opties (convertDocx / convertWithLibs):
+ *   includeImages  true = afbeeldingen ingebed meenemen (als data-URI, onderaan het bestand)
+ *   labels.image   woord voor de plaatsaanduiding, bijv. 'afbeelding' of 'image'
+ *   labels.images  kopje boven de ingebedde afbeeldingen
+ *
+ * Fouten hebben een .code: 'libs' (bibliotheek niet geladen), 'docFormat' (.doc), 'invalid'.
  */
 (function (global) {
     'use strict';
@@ -28,6 +35,17 @@
         for (let i = 1; i <= 9; i++) STYLE_MAP.push(`p[style-name='${name} ${i}'] => !`);
     }
 
+    // Afbeeldingstypen die een browser kan tonen (EMF/WMF uit Word bijv. niet).
+    const BROWSER_IMAGE_TYPES = /^image\/(png|jpe?g|gif|webp|svg\+xml|bmp)$/i;
+
+    const DEFAULT_LABELS = { image: 'afbeelding', images: 'Afbeeldingen (ingebed)' };
+
+    function importError(code, message) {
+        const err = new Error(message);
+        err.code = code;
+        return err;
+    }
+
     // ------------------------------------------------------------ bibliotheken laden
 
     let libsPromise = null;
@@ -37,7 +55,7 @@
             const s = document.createElement('script');
             s.src = src;
             s.onload = resolve;
-            s.onerror = () => reject(new Error('Kon de conversiebibliotheek niet laden. Ben je online?'));
+            s.onerror = () => reject(importError('libs', 'Could not load the conversion library. Are you online?'));
             document.head.appendChild(s);
         });
     }
@@ -92,7 +110,13 @@
             .trim();
     }
 
-    function createTurndown(TurndownService) {
+    function imagePlaceholder(alt, label) {
+        alt = (alt || '').replace(/\s+/g, ' ').trim();
+        return alt ? `*[${label}: ${alt}]*` : `*[${label}]*`;
+    }
+
+    /** ctx: { includeImages, labels, images: Map(src -> id) } wordt gedeeld met de tabelcellen. */
+    function createTurndown(TurndownService, ctx) {
         const td = new TurndownService({
             headingStyle: 'atx',
             bulletListMarker: '-',
@@ -118,12 +142,18 @@
             replacement: (content) => wrapInline(content, '~~'),
         });
 
-        // Afbeeldingen: alleen de alt-tekst bewaren.
+        // Afbeeldingen: standaard alleen de alt-tekst. Met includeImages een verwijzing
+        // ![alt][img-1]; de data zelf komt onderaan, zodat de tekst leesbaar blijft.
         td.addRule('image', {
             filter: 'img',
             replacement: (content, node) => {
                 const alt = (node.getAttribute('alt') || '').replace(/\s+/g, ' ').trim();
-                return alt ? `*[afbeelding: ${alt}]*` : '*[afbeelding]*';
+                const src = node.getAttribute('src') || '';
+                if (ctx.includeImages && src.startsWith('data:')) {
+                    if (!ctx.images.has(src)) ctx.images.set(src, `img-${ctx.images.size + 1}`);
+                    return `![${alt.replace(/[[\]]/g, '')}][${ctx.images.get(src)}]`;
+                }
+                return imagePlaceholder(alt, ctx.labels.image);
             },
         });
 
@@ -174,7 +204,7 @@
         td.addRule('table', {
             filter: 'table',
             replacement: (content, node) => {
-                if (!cellService) cellService = createTurndown(TurndownService);
+                if (!cellService) cellService = createTurndown(TurndownService, ctx);
                 const rows = [];
                 const collect = (el) => {
                     for (const child of Array.from(el.childNodes)) {
@@ -224,8 +254,9 @@
             .replace(/\n{3,}/g, '\n\n')        // max. één lege regel
             .replace(/^(#{1,6} \d+)\\\. /gm, '$1. ') // "# 1\. Doel" -> "# 1. Doel" (in een kop onnodig)
             // Aangrenzende stukken met dezelfde opmaak samenvoegen: "*Soms is dit* *onrechtmatig*" -> "*Soms is dit onrechtmatig*"
-            .replace(/([^\s*\\])\*\* \*\*(?=[^\s*])/g, '$1 ')
-            .replace(/([^\s*\\])\* \*(?=[^\s*])/g, '$1 ')
+            // (niet tussen twee afbeelding-plaatsaanduidingen: "*[afbeelding]* *[afbeelding]*")
+            .replace(/([^\s*\\\]])\*\* \*\*(?=[^\s*[])/g, '$1 ')
+            .replace(/([^\s*\\\]])\* \*(?=[^\s*[])/g, '$1 ')
             // Losse regel direct gevolgd door een kop met dezelfde tekst (bijv. een ondertitel-label).
             .replace(/^(?:#+ )?(.+)\n\n(#+ \1)$/gm, '$2')
             .trim() + '\n';
@@ -245,33 +276,73 @@
 
     // ------------------------------------------------------------ publieke functies
 
+    /**
+     * Haalt ingebedde afbeeldingen (data-URI's) uit Markdown en zet er weer
+     * een plaatsaanduiding met de beschrijving voor in de plaats. Handig om te
+     * kopiëren naar een AI-chat: base64-data is daar alleen maar ruis.
+     */
+    function stripEmbeddedImages(md, label = DEFAULT_LABELS.image) {
+        const ids = new Set();
+        let out = md
+            // Kopje-commentaar direct boven de afbeeldingsdefinities
+            .replace(/^<!--[^\n]*-->[ \t]*\n(?=\[[^\]\n]+\]:[ \t]*<?data:)/gm, '')
+            // Definities: [img-1]: data:image/png;base64,...
+            .replace(/^\[([^\]\n]+)\]:[ \t]*<?data:[^\n]*(?:\n|$)/gm, (m, id) => {
+                ids.add(id.toLowerCase());
+                return '';
+            });
+        out = out
+            .replace(/!\[([^\]\n]*)\]\[([^\]\n]*)\]/g, (m, alt, id) =>
+                (ids.has((id || alt).toLowerCase()) ? imagePlaceholder(alt, label) : m))
+            .replace(/!\[([^\]\n]*)\]\(<?data:[^)]*\)/g, (m, alt) => imagePlaceholder(alt, label));
+        return out.replace(/\n{3,}/g, '\n\n').trim() + '\n';
+    }
+
+    function hasEmbeddedImages(md) {
+        return /^\[[^\]\n]+\]:[ \t]*<?data:|!\[[^\]\n]*\]\(<?data:/m.test(md);
+    }
+
     /** input: {arrayBuffer} (browser) of {buffer} (Node). */
-    async function convertWithLibs(input, mammoth, TurndownService) {
+    async function convertWithLibs(input, mammoth, TurndownService, options = {}) {
+        const ctx = {
+            includeImages: !!options.includeImages,
+            labels: Object.assign({}, DEFAULT_LABELS, options.labels),
+            images: new Map(),
+        };
         const result = await mammoth.convertToHtml(input, {
             styleMap: STYLE_MAP,
             transformDocument: mammoth.transforms.run(plainTabs),
-            convertImage: mammoth.images.imgElement(() => Promise.resolve({ src: 'afbeelding' })),
+            convertImage: mammoth.images.imgElement((image) => {
+                if (!ctx.includeImages || !BROWSER_IMAGE_TYPES.test(image.contentType || '')) {
+                    return Promise.resolve({ src: '' });
+                }
+                return image.read('base64').then((data) => ({ src: `data:${image.contentType};base64,${data}` }));
+            }),
         });
-        const markdown = cleanMarkdown(createTurndown(TurndownService).turndown(result.value));
-        return { markdown, messages: result.messages };
+        let markdown = cleanMarkdown(createTurndown(TurndownService, ctx).turndown(result.value));
+        if (ctx.images.size) {
+            const defs = [...ctx.images].map(([src, id]) => `[${id}]: ${src}`);
+            markdown += `\n<!-- ${ctx.labels.images} -->\n${defs.join('\n')}\n`;
+        }
+        return { markdown, imageCount: ctx.images.size, messages: result.messages };
     }
 
     /** Zet een File/Blob (.docx) om naar Markdown. */
-    async function convertDocx(file) {
+    async function convertDocx(file, options = {}) {
         if (/\.doc$/i.test(file.name || '')) {
-            throw new Error('Het oude .doc-formaat wordt niet ondersteund. Open het bestand in Word en sla het op als .docx.');
+            throw importError('docFormat', 'The old .doc format is not supported. Save the file as .docx in Word.');
         }
         await loadLibs();
         const arrayBuffer = await file.arrayBuffer();
         try {
-            return await convertWithLibs({ arrayBuffer }, global.mammoth, global.TurndownService);
+            return await convertWithLibs({ arrayBuffer }, global.mammoth, global.TurndownService, options);
         } catch (err) {
             console.error(err);
-            throw new Error('Dit bestand kon niet worden gelezen. Is het een geldig .docx-bestand zonder wachtwoord?');
+            throw importError('invalid', 'This file could not be read. Is it a valid .docx file without a password?');
         }
     }
 
-    const api = { convertDocx, convertWithLibs, cleanMarkdown };
+    const api = { convertDocx, convertWithLibs, cleanMarkdown, stripEmbeddedImages, hasEmbeddedImages };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else global.WordImport = api;
 })(typeof window !== 'undefined' ? window : globalThis);

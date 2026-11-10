@@ -1,164 +1,100 @@
-# Markdown Reader & Editor
+# Markdown Studio
 
-Een complete Markdown reader én editor met live preview, dark mode, syntax highlighting en meer!
+**Nederlands** · [English](README.en.md)
 
-## Features
+Lees en schrijf Markdown met live preview, en zet Word-documenten om naar Markdown, zodat AI ze snel kan lezen en interpreteren. Alles draait in je eigen browser: er wordt niets geüpload.
 
-✨ **Modern Design** - Clean en overzichtelijk interface geoptimaliseerd voor Mac
-🌓 **Dark Mode** - Schakel eenvoudig tussen licht en donker thema
-✍️ **Live Editor** - Schrijf Markdown met real-time preview
-👁️ **Flexibele Views** - Kies tussen split view, editor only, of preview only
-💻 **Syntax Highlighting** - Mooie kleuren voor code blocks in alle populaire talen
-📚 **Recent Files** - Snelle toegang tot je recent geopende bestanden
-🎯 **Drag & Drop** - Sleep bestanden direct in de app
-📄 **Word importeren** - Zet .docx-documenten om naar Markdown, zodat AI ze snel kan lezen
-📋 **Kopiëren** - Kopieer de Markdown met één klik, bijvoorbeeld om in een AI-chat te plakken
-💾 **Snel Opslaan** - Download je werk met één klik of gebruik Cmd+S
+## Functies
 
-## Hoe te gebruiken
+- 📄 **Word importeren**: zet `.docx`-documenten om naar nette Markdown
+- 🖼️ **Afbeeldingen meenemen** (optioneel): bewaar de afbeeldingen uit Word in het `.md`-bestand
+- 📋 **Kopiëren voor AI**: kopieer de Markdown met één klik om in een AI-chat te plakken
+- ✍️ **Live editor**: schrijf Markdown en zie direct het resultaat
+- 👁️ **Weergaven**: naast elkaar, alleen editor of alleen voorbeeld
+- 🌓 **Donkere modus** en 🇳🇱/🇬🇧 **Nederlands en Engels**
+- 💻 **Syntax highlighting** voor codeblokken
+- 📚 **Recent geopend** en 🎯 **slepen en neerzetten**
+- 💾 **Opslaan** met één klik of met Cmd+S
 
-### Opstarten
-1. Open `index.html` in je webbrowser
-2. Begin direct met schrijven of open een bestaand bestand
-
-### Nieuw Document Schrijven
-1. Klik op "Nieuw Bestand"
-2. Begin met typen in de editor (links)
-3. Zie de preview in real-time (rechts)
-4. Klik op "Opslaan" of druk Cmd+S om je werk te downloaden
-
-### Bestaand Bestand Openen
-1. Klik op "Open MD Bestand" of sleep een .md bestand in het venster
-2. Het bestand opent direct in de editor
-3. Bewerk en sla op wanneer je klaar bent
+## Gebruik
 
 ### Word-document omzetten naar Markdown
-1. Klik op "Word importeren" of sleep een `.docx`-bestand in het venster
-2. Het document wordt omgezet en opent in de editor (bijv. `rapport.docx` → `rapport.md`)
-3. Klik op "Kopiëren" om de Markdown in een AI-chat te plakken, of op "Opslaan" om een `.md`-bestand te downloaden
 
-**Privacy:** de omzetting gebeurt volledig in je eigen browser. Het document wordt nergens naartoe gestuurd, ook niet als de app op GitHub Pages draait. Alleen de conversiebibliotheken worden bij het eerste gebruik van een CDN (jsDelivr) geladen.
+1. Klik op **Word importeren** of sleep een `.docx`-bestand in het venster.
+2. Het document wordt omgezet en opent in de editor (`rapport.docx` → `rapport.md`).
+3. Klik op **Kopiëren** om de Markdown in een AI-chat te plakken, of op **Opslaan** om een `.md`-bestand te downloaden.
 
 Wat er bij het omzetten gebeurt:
-- Koppen, lijsten, vet/cursief, tabellen, links en voetnoten (`[^1]`) worden Markdown
-- Afbeeldingen worden `*[afbeelding: alt-tekst]*`: de beschrijving blijft behouden, de afbeelding zelf niet
-- De inhoudsopgave met paginanummers wordt overgeslagen (ruis voor een AI)
-- Tabs worden spaties, en lege tabelkoppen, dubbele koppen en overbodige witregels worden opgeschoond
 
-Beperkingen:
-- Alleen `.docx`; sla oude `.doc`-bestanden eerst in Word op als `.docx`
-- Automatische nummering van koppen (1.1, 2.3 …) komt niet mee, alleen de koptekst
-- Tekstvakken en SmartArt worden niet altijd meegenomen
-- Met een wachtwoord beveiligde documenten kunnen niet worden geopend
+- Koppen, lijsten, vet/cursief, tabellen, links en voetnoten (`[^1]`) worden Markdown.
+- Afbeeldingen worden standaard `*[afbeelding: beschrijving]*`: de beschrijving (alt-tekst) uit Word blijft behouden.
+- De inhoudsopgave met paginanummers wordt overgeslagen: die is ruis voor een AI.
+- Lege tabelrijen en -kolommen, opmaaktabellen, dubbele koppen en overbodige witregels worden opgeschoond.
 
-## Keyboard Shortcuts
+### Afbeeldingen meenemen
 
-- **Cmd+S** (of Ctrl+S) - Bestand opslaan
-- **Cmd+E** (of Ctrl+E) - Wissel tussen view modes (split/editor/preview)
+Vink **Afbeeldingen meenemen** aan om de afbeeldingen te bewaren. Ze komen dan als verwijzing in de tekst (`![beschrijving][img-1]`), en de afbeeldingsdata staat onderaan het bestand. Zo blijft de tekst leesbaar.
 
-## View Modes
+- Het `.md`-bestand wordt een stuk groter (een beleidsstuk van 32 KB kan bijvoorbeeld 900 KB worden).
+- **Kopiëren** laat de afbeeldingen altijd weg en zet er weer `*[afbeelding: beschrijving]*` voor in de plaats: een AI-chat kan ingebedde afbeeldingen niet lezen.
+- **Opslaan** bewaart ze wel.
+- Afbeeldingsformaten die een browser niet kan tonen (zoals EMF uit oudere Word-documenten) worden altijd een beschrijving.
 
-Klik op de view toggle button in de toolbar om te wisselen tussen:
+### Privacy
 
-1. **Split View** - Editor + Preview naast elkaar (standaard)
-2. **Editor Only** - Alleen de editor voor geconcentreerd schrijven
-3. **Preview Only** - Alleen de preview voor lezen
+De omzetting gebeurt volledig in je eigen browser. Het document wordt nergens naartoe gestuurd, ook niet als de app op GitHub Pages draait. Alleen de conversiebibliotheken worden bij het eerste gebruik van een CDN (jsDelivr) geladen.
 
-## Ondersteunde Markdown Features
+### Beperkingen
 
-### Tekst Opmaak
-- **Vetgedrukt**: `**tekst**` of `__tekst__`
-- *Cursief*: `*tekst*` of `_tekst_`
-- ~~Doorgestreept~~: `~~tekst~~`
+- Alleen `.docx`. Sla oude `.doc`-bestanden eerst in Word op als `.docx`.
+- Automatische nummering van koppen (1.1, 2.3 …) komt niet mee, alleen de koptekst.
+- Tekstvakken en SmartArt worden niet altijd meegenomen.
+- Met een wachtwoord beveiligde documenten kunnen niet worden geopend.
 
-### Koppen
-```markdown
-# H1 Kop
-## H2 Kop
-### H3 Kop
-```
+### Schrijven en bewerken
 
-### Lijsten
-```markdown
-- Ongeordende lijst item
-- Nog een item
+- **Nieuw bestand**: begin met een voorbeelddocument.
+- **Open MD-bestand**, of sleep een `.md`-bestand in het venster.
+- **Opslaan** (Cmd/Ctrl+S) schrijft terug naar het geopende bestand als je browser dat ondersteunt (Chrome, Edge). Anders wordt het bestand gedownload.
 
-1. Geordende lijst
-2. Item 2
-```
+### Sneltoetsen
 
-### Code
-Inline code: \`code hier\`
+| Toets | Actie |
+| --- | --- |
+| Cmd/Ctrl + S | Opslaan |
+| Cmd/Ctrl + E | Weergave wisselen (naast elkaar → editor → voorbeeld) |
 
-Code blocks:
-\`\`\`javascript
-function hello() {
-    console.log("Hello!");
-}
-\`\`\`
+### Taal
 
-### Links en Afbeeldingen
-```markdown
-[Link tekst](https://example.com)
-![Alt tekst](image.jpg)
-```
-
-### Quotes
-```markdown
-> Dit is een quote
-> Over meerdere regels
-```
-
-### Tabellen
-```markdown
-| Kolom 1 | Kolom 2 |
-|---------|---------|
-| Data 1  | Data 2  |
-```
+De app kiest automatisch de taal van je browser (Nederlands of Engels). Met de knop **EN**/**NL** naast de titel wissel je zelf. Je keuze wordt onthouden, net als de donkere modus en de optie voor afbeeldingen.
 
 ## Publiceren op GitHub Pages
 
 De app bestaat alleen uit statische bestanden en draait dus direct op GitHub Pages:
 
-1. Maak een (publieke) repository op GitHub en zet deze bestanden in de hoofdmap:
-   `index.html`, `app.js`, `word-import.js`, `styles.css`, `README.md`, `.nojekyll`,
-   `favicon.svg`, `favicon.ico` en `apple-touch-icon.png`
-2. Ga in de repository naar **Settings → Pages**
-3. Kies bij *Source* voor **Deploy from a branch**, branch `main`, map `/ (root)`, en klik op **Save**
-4. Na een minuut staat de app op `https://<gebruikersnaam>.github.io/<repository>/`
+1. Zet de bestanden in de hoofdmap van een (openbare) repository.
+2. Ga in de repository naar **Settings → Pages**.
+3. Kies bij *Source* voor **Deploy from a branch**, branch `main`, map `/ (root)`, en klik op **Save**.
+4. Na een minuut staat de app op `https://<gebruikersnaam>.github.io/<repository>/`.
 
-> Zet nooit Word-documenten of andere vertrouwelijke bestanden in de repository: alles daarin is openbaar.
+> Zet nooit Word-documenten of andere vertrouwelijke bestanden in de repository: alles daarin is openbaar. De `.gitignore` houdt Office- en PDF-bestanden standaard tegen.
 
-## Installatie Tips
+## Als app op je Mac
 
-### Als Standalone App op Mac
-
-**Safari:**
-1. Open `index.html` in Safari
-2. Ga naar File → Add to Dock
-3. Nu heb je een app icoon in je Dock!
-
-**Chrome:**
-1. Open `index.html` in Chrome
-2. Klik op ⋮ (drie puntjes) → More Tools → Create Shortcut
-3. Vink "Open as window" aan
-4. Perfect! Nu werkt het als een echte app
-
-## Tips & Tricks
-
-- De app onthoudt automatisch je dark mode voorkeur
-- Recent geopende bestanden blijven opgeslagen in je browser
-- Gebruik Tab in de editor voor inspringen
-- De editor gebruikt een monospace font voor gemakkelijk lezen
-- Live preview update terwijl je typt
+- **Safari**: open de app en kies **Archief → Voeg toe aan Dock**.
+- **Chrome**: open de app, klik op ⋮ → **Opslaan en delen → Pagina installeren als app**.
 
 ## Technologie
 
-- **Marked.js** voor Markdown parsing
-- **Highlight.js** voor syntax highlighting
-- **Mammoth.js** en **Turndown** voor het omzetten van Word naar Markdown (worden pas geladen als je een Word-bestand importeert)
-- Pure HTML/CSS/JavaScript - geen installatie nodig!
+- Pure HTML, CSS en JavaScript, zonder build-stap of installatie
+- [Marked](https://marked.js.org/) voor het tonen van Markdown
+- [Highlight.js](https://highlightjs.org/) voor syntax highlighting
+- [Mammoth.js](https://github.com/mwilliamson/mammoth.js) en [Turndown](https://github.com/mixmark-io/turndown) voor Word → Markdown (pas geladen als je een Word-bestand importeert)
 
----
-
-Veel schrijfplezier! 📝
+| Bestand | Inhoud |
+| --- | --- |
+| `index.html` | De pagina |
+| `app.js` | Editor, preview, bestanden, kopiëren, opslaan |
+| `word-import.js` | Word → Markdown, inclusief opschoning voor AI |
+| `i18n.js` | Alle teksten in het Nederlands en Engels |
+| `styles.css` | Opmaak, licht en donker |

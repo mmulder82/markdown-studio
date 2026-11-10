@@ -1,7 +1,7 @@
 // State management
 let currentFileHandle = null; // File System Access API handle
 let currentFilePath = null;
-let currentFileName = 'Untitled.md';
+let currentFileName = t('file.untitled');
 let currentContent = '';
 let isEditMode = false;
 let recentFiles = JSON.parse(localStorage.getItem('recentFiles') || '[]');
@@ -30,6 +30,9 @@ const importWordBtn = document.getElementById('import-word');
 const wordInput = document.getElementById('word-input');
 const copyMarkdownBtn = document.getElementById('copy-markdown');
 const toast = document.getElementById('toast');
+const includeImagesCheckbox = document.getElementById('include-images');
+const langToggle = document.getElementById('lang-toggle');
+const saveLabel = document.getElementById('save-label');
 
 // View modes: 'split', 'editor', 'preview'
 let viewMode = 'split';
@@ -96,16 +99,20 @@ function setViewMode(mode) {
     if (mode === 'split') {
         editorPane.style.display = 'flex';
         previewPane.style.display = 'flex';
-        viewModeText.textContent = 'Editor';
     } else if (mode === 'editor') {
         editorPane.style.display = 'flex';
         editorPane.style.width = '100%';
-        viewModeText.textContent = 'Preview';
     } else if (mode === 'preview') {
         previewPane.style.display = 'flex';
         previewPane.style.width = '100%';
-        viewModeText.textContent = 'Split';
     }
+    updateViewModeText();
+}
+
+// De knop toont de weergave waar je naartoe gaat
+function updateViewModeText() {
+    const next = { split: 'editor', editor: 'preview', preview: 'split' }[viewMode];
+    viewModeText.textContent = t(`toolbar.view.${next}`);
 }
 
 viewToggle.addEventListener('click', () => {
@@ -136,7 +143,7 @@ function renderMarkdown(markdown, fileName) {
     content.innerHTML = html;
 
     // Update page title
-    document.title = `${fileName} - Markdown Reader`;
+    document.title = `${fileName} – ${t('app.name')}`;
 
     // Highlight code blocks
     document.querySelectorAll('pre code').forEach((block) => {
@@ -145,7 +152,7 @@ function renderMarkdown(markdown, fileName) {
 }
 
 // Editor management
-function showEditor(markdown = '', fileName = 'Untitled.md') {
+function showEditor(markdown = '', fileName = t('file.untitled')) {
     dropZone.style.display = 'none';
     toolbar.style.display = 'flex';
     editorContainer.style.display = 'flex';
@@ -154,6 +161,7 @@ function showEditor(markdown = '', fileName = 'Untitled.md') {
     currentContent = markdown;
     currentFileName = fileName;
     fileNameDisplay.textContent = fileName;
+    document.title = `${fileName} – ${t('app.name')}`;
 
     setViewMode('split');
     updatePreview();
@@ -169,6 +177,7 @@ function hideEditor() {
     toolbar.style.display = 'none';
     editorContainer.style.display = 'none';
     dropZone.style.display = 'flex';
+    document.title = t('app.name');
 }
 
 // File handling
@@ -193,7 +202,10 @@ function renderRecentFiles() {
     recentList.innerHTML = '';
 
     if (recentFiles.length === 0) {
-        recentList.innerHTML = '<li class="empty">Nog geen bestanden geopend</li>';
+        const li = document.createElement('li');
+        li.className = 'empty';
+        li.textContent = t('sidebar.recentEmpty');
+        recentList.appendChild(li);
         return;
     }
 
@@ -213,7 +225,7 @@ function renderRecentFiles() {
         li.appendChild(fileDate);
 
         li.addEventListener('click', () => {
-            alert('Vanwege browser beveiliging moet je het bestand opnieuw selecteren. Gebruik "Open MD Bestand" en navigeer naar: ' + file.path);
+            alert(t('alert.recentReopen', { path: file.path }));
         });
 
         recentList.appendChild(li);
@@ -228,12 +240,12 @@ function formatDate(dateString) {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Zojuist';
-    if (diffMins < 60) return `${diffMins} min geleden`;
-    if (diffHours < 24) return `${diffHours} uur geleden`;
-    if (diffDays < 7) return `${diffDays} dagen geleden`;
+    if (diffMins < 1) return t('date.justNow');
+    if (diffMins < 60) return t('date.minutes', { n: diffMins });
+    if (diffHours < 24) return t('date.hours', { n: diffHours });
+    if (diffDays < 7) return t('date.days', { n: diffDays });
 
-    return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString(I18n.locale, { day: 'numeric', month: 'short' });
 }
 
 // Korte melding onderin beeld
@@ -248,23 +260,42 @@ function showToast(message, { error = false, duration = 3000 } = {}) {
     }
 }
 
+function formatSize(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+    return `${bytes.toLocaleString(I18n.locale, { maximumFractionDigits: i ? 1 : 0 })} ${units[i]}`;
+}
+
 // Word-document (.docx) omzetten naar Markdown en openen in de editor
 let isImporting = false;
 async function importWordFile(file) {
     if (isImporting) return;
     isImporting = true;
-    showToast(`"${file.name}" wordt omgezet…`, { duration: 0 });
+    showToast(t('word.converting', { name: file.name }), { duration: 0 });
     try {
-        const { markdown } = await WordImport.convertDocx(file);
+        const { markdown, imageCount } = await WordImport.convertDocx(file, {
+            includeImages: includeImagesCheckbox.checked,
+            labels: { image: t('word.imageLabel'), images: t('word.imagesHeading') },
+        });
         const mdName = file.name.replace(/\.docx?$/i, '') + '.md';
 
         currentFileHandle = null; // opslaan = downloaden als nieuw .md-bestand
         showEditor(markdown, mdName);
         addToRecentFiles(file.name, mdName);
-        showToast(`Omgezet uit Word: ${markdown.length.toLocaleString('nl-NL')} tekens. Kopieer of sla op als .md.`, { duration: 5000 });
+
+        const textLength = WordImport.stripEmbeddedImages(markdown, t('word.imageLabel')).length;
+        const chars = textLength.toLocaleString(I18n.locale);
+        if (imageCount) {
+            const size = formatSize(new Blob([markdown]).size);
+            showToast(t('word.convertedImages', { chars, images: imageCount, size }), { duration: 6000 });
+        } else {
+            showToast(t('word.converted', { chars }), { duration: 5000 });
+        }
     } catch (err) {
         console.error(err);
-        showToast(err.message || 'Omzetten mislukt', { error: true, duration: 7000 });
+        const key = `word.error.${err.code || 'generic'}`;
+        showToast(t(key) === key ? t('word.error.generic') : t(key), { error: true, duration: 7000 });
     } finally {
         isImporting = false;
     }
@@ -284,7 +315,7 @@ function handleFile(file) {
         return;
     }
     if (!isMarkdownFile(file)) {
-        alert('Selecteer alsjeblieft een .md-, .markdown- of Word-bestand (.docx)');
+        alert(t('alert.wrongType'));
         return;
     }
 
@@ -300,7 +331,7 @@ function handleFile(file) {
     };
 
     reader.onerror = () => {
-        alert('Fout bij het lezen van het bestand');
+        alert(t('alert.readError'));
     };
 
     reader.readAsText(file);
@@ -344,16 +375,9 @@ async function saveFile() {
 
 // Show save success feedback
 function showSaveSuccess() {
-    const originalText = saveFileBtn.innerHTML;
-    saveFileBtn.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        Opgeslagen!
-    `;
-
+    saveLabel.textContent = t('toolbar.saved');
     setTimeout(() => {
-        saveFileBtn.innerHTML = originalText;
+        saveLabel.textContent = t('toolbar.save');
     }, 2000);
 }
 
@@ -369,7 +393,7 @@ async function openFileWithPicker() {
         const [fileHandle] = await window.showOpenFilePicker({
             types: [
                 {
-                    description: 'Markdown Files',
+                    description: t('picker.markdown'),
                     accept: {
                         'text/markdown': ['.md', '.markdown']
                     }
@@ -400,34 +424,7 @@ newFileBtn.addEventListener('click', () => {
     // Clear file handle for new file
     currentFileHandle = null;
 
-    const defaultContent = `# Nieuw Document
-
-Welkom! Begin hier met schrijven...
-
-## Voorbeelden
-
-### Opmaak
-- **Vetgedrukte tekst**
-- *Cursieve tekst*
-- ~~Doorgestreepte tekst~~
-
-### Code
-Inline code: \`const x = 5;\`
-
-Code block:
-\`\`\`javascript
-function hello() {
-    console.log("Hallo!");
-}
-\`\`\`
-
-### Links
-[Klik hier](https://example.com)
-
-### Afbeeldingen
-![Alt text](image-url.jpg)
-`;
-    showEditor(defaultContent, 'Untitled.md');
+    showEditor(t('newDoc'), t('file.untitled'));
 });
 
 openFileBtn.addEventListener('click', () => {
@@ -457,25 +454,67 @@ wordInput.addEventListener('change', (e) => {
     wordInput.value = ''; // zelfde bestand later opnieuw kunnen kiezen
 });
 
-// Markdown kopiëren (bijv. om in een AI-chat te plakken)
+// Markdown kopiëren (bijv. om in een AI-chat te plakken).
+// Ingebedde afbeeldingen gaan er altijd uit: base64-data is voor een AI-chat alleen ruis.
+function copyWithFallback(text) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
+}
+
 copyMarkdownBtn.addEventListener('click', async () => {
-    const text = markdownEditor.value;
+    let text = markdownEditor.value;
+    const withoutImages = WordImport.hasEmbeddedImages(text);
+    if (withoutImages) {
+        text = WordImport.stripEmbeddedImages(text, t('word.imageLabel'));
+    }
     try {
         await navigator.clipboard.writeText(text);
     } catch (err) {
-        // Terugval voor browsers zonder Clipboard API
-        markdownEditor.select();
-        document.execCommand('copy');
-        markdownEditor.setSelectionRange(0, 0);
+        copyWithFallback(text); // browsers zonder Clipboard API
     }
     const label = copyMarkdownBtn.querySelector('span');
-    label.textContent = 'Gekopieerd!';
-    setTimeout(() => { label.textContent = 'Kopiëren'; }, 1500);
+    label.textContent = t('toolbar.copied');
+    setTimeout(() => { label.textContent = t('toolbar.copy'); }, 1500);
+    if (withoutImages) {
+        showToast(t('copy.withoutImages'), { duration: 5000 });
+    }
 });
 
-// Live preview
+// Optie: afbeeldingen meenemen bij Word-import (onthouden in de browser)
+try {
+    includeImagesCheckbox.checked = localStorage.getItem('includeImages') === 'true';
+} catch (e) { /* geen opslag beschikbaar */ }
+includeImagesCheckbox.addEventListener('change', () => {
+    try { localStorage.setItem('includeImages', includeImagesCheckbox.checked); } catch (e) { /* negeren */ }
+});
+
+// Taal wisselen (Nederlands / English)
+langToggle.addEventListener('click', () => {
+    I18n.setLanguage(I18n.lang === 'nl' ? 'en' : 'nl');
+});
+
+document.addEventListener('languagechange', () => {
+    renderRecentFiles();
+    updateViewModeText();
+    document.title = toolbar.style.display === 'none' ? t('app.name') : `${currentFileName} – ${t('app.name')}`;
+});
+
+// Live preview (bij grote documenten, bijv. met ingebedde afbeeldingen, iets vertraagd)
+let previewTimer = null;
 markdownEditor.addEventListener('input', () => {
-    updatePreview();
+    clearTimeout(previewTimer);
+    if (markdownEditor.value.length > 200000) {
+        previewTimer = setTimeout(updatePreview, 300);
+    } else {
+        updatePreview();
+    }
 });
 
 // Keyboard shortcuts
@@ -533,5 +572,8 @@ document.addEventListener('drop', (e) => {
 });
 
 // Initialize
+I18n.applyTranslations();
+document.title = t('app.name');
 initTheme();
 renderRecentFiles();
+updateViewModeText();

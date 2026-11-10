@@ -72,6 +72,20 @@ body {
     font-weight: 600;
 }
 
+.sidebar-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.lang-button {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-width: 36px;
+    height: 36px;
+}
+
 .icon-button {
     background: none;
     border: none;
@@ -136,6 +150,31 @@ body {
 .secondary-button:hover {
     background-color: var(--bg-secondary);
     border-color: var(--accent-color);
+}
+
+/* Optie onder "Word importeren" */
+.option-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.option-toggle input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent-color);
+    cursor: pointer;
+}
+
+.option-toggle:hover {
+    color: var(--text-primary);
 }
 
 .recent-files {

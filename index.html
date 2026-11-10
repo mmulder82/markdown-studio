@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Reader</title>
+    <title>Markdown Studio</title>
+    <meta name="description" content="Markdown lezen, schrijven en Word-documenten omzetten naar Markdown voor AI. Read and write Markdown, and convert Word documents to Markdown for AI.">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -18,20 +19,23 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2>Markdown Reader</h2>
-                <button id="theme-toggle" class="icon-button" title="Toggle dark mode">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                        <path class="sun" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
-                        <path class="moon" style="display:none;" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-                    </svg>
-                </button>
+                <h2 data-i18n="app.name">Markdown Studio</h2>
+                <div class="sidebar-header-buttons">
+                    <button id="lang-toggle" class="icon-button lang-button" data-i18n="lang.switch" data-i18n-title="lang.switchTitle">EN</button>
+                    <button id="theme-toggle" class="icon-button" data-i18n-title="theme.toggle">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path class="sun" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
+                            <path class="moon" style="display:none;" d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <button id="new-file" class="primary-button">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M8 4a.5.5 0 01.5.5v3h3a.5.5 0 010 1h-3v3a.5.5 0 01-1 0v-3h-3a.5.5 0 010-1h3v-3A.5.5 0 018 4z"/>
                 </svg>
-                Nieuw Bestand
+                <span data-i18n="sidebar.new">Nieuw bestand</span>
             </button>
 
             <button id="open-file" class="secondary-button tight">
@@ -39,20 +43,25 @@
                     <path d="M2 2a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm2 0v12h8V2H4z"/>
                     <path d="M6 4h4v1H6V4zm0 2h4v1H6V6zm0 2h4v1H6V8z"/>
                 </svg>
-                Open MD Bestand
+                <span data-i18n="sidebar.open">Open MD-bestand</span>
             </button>
 
-            <button id="import-word" class="secondary-button" title="Zet een Word-document (.docx) om naar Markdown">
+            <button id="import-word" class="secondary-button tight" data-i18n-title="sidebar.importWordTitle">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <polyline points="8 13 9.5 18 12 14 14.5 18 16 13"></polyline>
                 </svg>
-                Word importeren
+                <span data-i18n="sidebar.importWord">Word importeren</span>
             </button>
 
+            <label class="option-toggle" data-i18n-title="sidebar.includeImagesHint">
+                <input type="checkbox" id="include-images">
+                <span data-i18n="sidebar.includeImages">Afbeeldingen meenemen</span>
+            </label>
+
             <div class="recent-files">
-                <h3>Recent geopend</h3>
+                <h3 data-i18n="sidebar.recent">Recent geopend</h3>
                 <ul id="recent-list"></ul>
             </div>
         </aside>
@@ -62,30 +71,30 @@
             <!-- Toolbar -->
             <div id="toolbar" class="toolbar" style="display: none;">
                 <div class="toolbar-left">
-                    <span id="file-name" class="file-name-display">Untitled.md</span>
+                    <span id="file-name" class="file-name-display"></span>
                 </div>
                 <div class="toolbar-right">
-                    <button id="copy-markdown" class="toolbar-button" title="Kopieer de Markdown, bijvoorbeeld om in een AI-chat te plakken">
+                    <button id="copy-markdown" class="toolbar-button" data-i18n-title="toolbar.copyTitle">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
-                        <span>Kopiëren</span>
+                        <span data-i18n="toolbar.copy">Kopiëren</span>
                     </button>
-                    <button id="view-toggle" class="toolbar-button" title="Toggle view mode">
+                    <button id="view-toggle" class="toolbar-button" data-i18n-title="toolbar.viewTitle">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
-                        <span id="view-mode-text">Preview</span>
+                        <span id="view-mode-text"></span>
                     </button>
-                    <button id="save-file" class="toolbar-button primary" title="Save file">
+                    <button id="save-file" class="toolbar-button primary" data-i18n-title="toolbar.saveTitle">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
                             <polyline points="17 21 17 13 7 13 7 21"></polyline>
                             <polyline points="7 3 7 8 15 8"></polyline>
                         </svg>
-                        Opslaan
+                        <span id="save-label" data-i18n="toolbar.save">Opslaan</span>
                     </button>
                 </div>
             </div>
@@ -96,16 +105,15 @@
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                         <polyline points="13 2 13 9 20 9"></polyline>
                     </svg>
-                    <h2>Sleep een .md- of Word-bestand hierheen</h2>
-                    <p>Word-documenten (.docx) worden omgezet naar Markdown, zodat AI ze makkelijk kan lezen.<br>
-                    Dat gebeurt in je eigen browser: het document wordt nergens naartoe gestuurd.</p>
+                    <h2 data-i18n="drop.title">Sleep een .md- of Word-bestand hierheen</h2>
+                    <p data-i18n-html="drop.text"></p>
                 </div>
             </div>
 
             <!-- Editor and Preview -->
             <div id="editor-container" class="editor-container" style="display: none;">
                 <div id="editor-pane" class="editor-pane">
-                    <textarea id="markdown-editor" class="markdown-editor" placeholder="Begin met typen... Gebruik Markdown syntax voor opmaak."></textarea>
+                    <textarea id="markdown-editor" class="markdown-editor" data-i18n-placeholder="editor.placeholder"></textarea>
                 </div>
                 <div id="preview-pane" class="preview-pane">
                     <div id="content" class="markdown-content"></div>
@@ -119,6 +127,7 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+    <script src="i18n.js"></script>
     <script src="word-import.js"></script>
     <script src="app.js"></script>
 </body>
