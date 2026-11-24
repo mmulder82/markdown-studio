@@ -553,7 +553,9 @@ document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         if (toolbar.style.display !== 'none') {
-            saveFile();
+            // Vanuit de Informatiemanagement-tool geopend: Cmd/Ctrl+S schrijft terug naar de tool
+            if (linkSession && returnBackBtn.style.display !== 'none' && !returnBackBtn.disabled) returnBackBtn.click();
+            else saveFile();
         }
     }
 
@@ -622,13 +624,21 @@ function initTrackerLink() {
             clearTimeout(linkWaitTimer);
             const b = Array.isArray(d.bestanden) ? d.bestanden[0] : null;
             if (!b || !(b.bytes instanceof ArrayBuffer) || typeof b.naam !== 'string') return;
-            linkSession = { id: d.sessie };
+            linkSession = { id: d.sessie, modus: d.modus === 'bewerk' ? 'bewerk' : 'nieuw' };
             await handleLinkedFile(new File([b.bytes], b.naam));
         } else if (d.type === 'im:ontvangen' && linkSession && d.sessie === linkSession.id) {
             returnBackBtn.disabled = false;
-            returnBackLabel.textContent = t('toolbar.returnBack');
-            if (d.ok) showToast(t('link.done', { name: d.bestandsnaam || currentFileName }), { duration: 6000 });
-            else showToast(t('link.error', { error: d.fout || '?' }), { error: true, duration: 7000 });
+            setReturnLabel();
+            if (d.ok) {
+                const key = d.vervangen ? 'link.saved' : 'link.done';
+                showToast(t(key, { name: d.bestandsnaam || currentFileName }), { duration: 3000 });
+                // Terug naar de Informatiemanagement-tool: tabblad naar voren halen (de browser staat dat
+                // niet altijd toe) en dit tabblad sluiten.
+                setTimeout(() => {
+                    try { window.opener && window.opener.focus(); } catch (_) { /* geblokkeerd */ }
+                    window.close();
+                }, 800);
+            } else showToast(t('link.error', { error: d.fout || '?' }), { error: true, duration: 7000 });
         }
     });
     showToast(t('link.waiting'), { duration: 0 });
@@ -636,10 +646,24 @@ function initTrackerLink() {
     window.opener.postMessage({ type: 'mdstudio:klaar', versie: 1 }, location.origin);
 }
 
+function setReturnLabel() {
+    const bewerk = linkSession && linkSession.modus === 'bewerk';
+    returnBackLabel.textContent = t(bewerk ? 'toolbar.saveBack' : 'toolbar.returnBack');
+    returnBackBtn.title = t(bewerk ? 'toolbar.saveBackTitle' : 'toolbar.returnBackTitle');
+}
+
 async function handleLinkedFile(file) {
-    if (isWordFile(file)) await importWordFile(file);
-    else handleFile(file);
+    if (isWordFile(file)) {
+        await importWordFile(file);
+    } else if (isMarkdownFile(file)) {
+        // Bestaand .md uit de tracker: direct in de editor, zodat Opslaan en terug het zelfde bestand bijwerkt
+        showEditor(await file.text(), file.name);
+    } else {
+        showToast(t('alert.wrongType'), { error: true, duration: 6000 });
+        return;
+    }
     currentFileHandle = null;
+    setReturnLabel();
     returnBackBtn.style.display = '';
 }
 

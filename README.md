@@ -53,7 +53,7 @@ De omzetting gebeurt volledig in je eigen browser. Het document wordt nergens na
 
 ### Koppeling met de Informatiemanagement-tool
 
-Staat deze pagina op hetzelfde websiteadres als de [Informatiemanagement-tool](https://github.com/mmulder82/informatiemanagement-tool), dan opent de knop **Naar Markdown** achter een Word-bijlage het document hier (`#koppeling`). Met **Terugzetten** komt het `.md`-bestand als nieuwe bijlage terug bij de activiteit. Berichten gaan alleen tussen vensters op precies hetzelfde websiteadres; het document verlaat je browser niet.
+Staat deze pagina op hetzelfde websiteadres als de [Informatiemanagement-tool](https://github.com/mmulder82/informatiemanagement-tool), dan zet de knop **Naar Markdown** achter een Word-bijlage het document hier om (`#koppeling`). Met **Terugzetten** komt het `.md`-bestand als nieuwe bijlage terug. Een bestaand `.md` uit de tool opent hier ook; **Opslaan en terug** (of Cmd/Ctrl+S) schrijft de wijzigingen naar hetzelfde bestand, tenzij dat intussen elders is gewijzigd. Daarna sluit deze pagina zichzelf en gaat de browser terug naar de tool. Berichten gaan alleen tussen vensters op precies hetzelfde websiteadres; het document verlaat je browser niet.
 
 ### Schrijven en bewerken
 

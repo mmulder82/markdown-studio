@@ -53,7 +53,7 @@ Conversion happens entirely in your own browser. The document is never sent anyw
 
 ### Link with the Informatiemanagement tool
 
-When this page is served from the same web address as the [Informatiemanagement tool](https://github.com/mmulder82/informatiemanagement-tool), the **Naar Markdown** button next to a Word attachment opens the document here (`#koppeling`). **Send back** returns the `.md` file as a new attachment on the activity. Messages only travel between windows on exactly the same web address; the document never leaves your browser.
+When this page is served from the same web address as the [Informatiemanagement tool](https://github.com/mmulder82/informatiemanagement-tool), the **Naar Markdown** button next to a Word attachment converts the document here (`#koppeling`). **Send back** returns the `.md` file as a new attachment. An existing `.md` from the tool opens here too; **Save and return** (or Cmd/Ctrl+S) writes the changes to the same file, unless it was changed elsewhere in the meantime. The page then closes itself and the browser returns to the tool. Messages only travel between windows on exactly the same web address; the document never leaves your browser.
 
 ### Writing and editing
 
