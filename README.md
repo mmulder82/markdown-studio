@@ -51,6 +51,10 @@ De omzetting gebeurt volledig in je eigen browser. Het document wordt nergens na
 - Tekstvakken en SmartArt worden niet altijd meegenomen.
 - Met een wachtwoord beveiligde documenten kunnen niet worden geopend.
 
+### Koppeling met de Informatiemanagement-tool
+
+Staat deze pagina op hetzelfde websiteadres als de [Informatiemanagement-tool](https://github.com/mmulder82/informatiemanagement-tool), dan opent de knop **Naar Markdown** achter een Word-bijlage het document hier (`#koppeling`). Met **Terugzetten** komt het `.md`-bestand als nieuwe bijlage terug bij de activiteit. Berichten gaan alleen tussen vensters op precies hetzelfde websiteadres; het document verlaat je browser niet.
+
 ### Schrijven en bewerken
 
 - **Nieuw bestand**: begin met een voorbeelddocument.

@@ -53,6 +53,36 @@ marked.setOptions({
     }
 });
 
+// Veiligheid: een Markdown-bestand (of een Word-document dat hier wordt omgezet) kan ruwe HTML
+// bevatten. Die tonen we als tekst en voeren we nooit uit. Links en afbeeldingen mogen alleen
+// naar veilige adressen wijzen (geen javascript: e.d.).
+function escapeHtml(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function isSafeUrl(href, { image = false } = {}) {
+    const url = String(href || '').trim();
+    if (/^(#|\/|\.\/|\.\.\/)/.test(url)) return true;              // anker of relatief pad
+    if (/^(https?:|mailto:|tel:)/i.test(url)) return true;
+    if (image && /^data:image\/(png|jpe?g|gif|webp);base64,/i.test(url)) return true;
+    return !/^[a-z][a-z0-9+.-]*:/i.test(url);                          // relatief zonder protocol
+}
+marked.use({
+    renderer: {
+        html(html) { return escapeHtml(typeof html === 'object' ? html.text : html); },
+        link(href, title, text) {
+            if (!isSafeUrl(href)) return text;
+            const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+            return `<a href="${escapeHtml(href)}"${titleAttr} rel="noopener noreferrer">${text}</a>`;
+        },
+        image(href, title, text) {
+            if (!isSafeUrl(href, { image: true })) return escapeHtml(text || '');
+            const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+            return `<img src="${escapeHtml(href)}" alt="${escapeHtml(text || '')}"${titleAttr}>`;
+        },
+    },
+});
+
 // Theme management
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -571,9 +601,66 @@ document.addEventListener('drop', (e) => {
     }
 });
 
+/* ---- Koppeling met de Informatiemanagement-tool ----
+   De tracker opent deze pagina als <adres>/markdown-studio/#koppeling in een nieuw tabblad en stuurt
+   het Word-bestand mee. Met Terugzetten gaat de Markdown als nieuwe bijlage terug. Berichten gaan
+   alleen tussen vensters op precies hetzelfde websiteadres (zelfde origin); al het andere wordt
+   genegeerd. Het bestand verlaat de browser niet. */
+const returnBackBtn = document.getElementById('return-back');
+const returnBackLabel = document.getElementById('return-back-label');
+let linkSession = null; // { id } zodra de tracker een bestand heeft gestuurd
+let linkWaitTimer = null;
+
+function initTrackerLink() {
+    if (location.hash !== '#koppeling' || !window.opener) return;
+    window.addEventListener('message', async (ev) => {
+        if (ev.origin !== location.origin || ev.source !== window.opener) return;
+        const d = ev.data;
+        if (!d || typeof d !== 'object' || d.versie !== 1) return;
+
+        if (d.type === 'im:open') {
+            clearTimeout(linkWaitTimer);
+            const b = Array.isArray(d.bestanden) ? d.bestanden[0] : null;
+            if (!b || !(b.bytes instanceof ArrayBuffer) || typeof b.naam !== 'string') return;
+            linkSession = { id: d.sessie };
+            await handleLinkedFile(new File([b.bytes], b.naam));
+        } else if (d.type === 'im:ontvangen' && linkSession && d.sessie === linkSession.id) {
+            returnBackBtn.disabled = false;
+            returnBackLabel.textContent = t('toolbar.returnBack');
+            if (d.ok) showToast(t('link.done', { name: d.bestandsnaam || currentFileName }), { duration: 6000 });
+            else showToast(t('link.error', { error: d.fout || '?' }), { error: true, duration: 7000 });
+        }
+    });
+    showToast(t('link.waiting'), { duration: 0 });
+    linkWaitTimer = setTimeout(() => showToast(t('link.noReply'), { error: true, duration: 8000 }), 15000);
+    window.opener.postMessage({ type: 'mdstudio:klaar', versie: 1 }, location.origin);
+}
+
+async function handleLinkedFile(file) {
+    if (isWordFile(file)) await importWordFile(file);
+    else handleFile(file);
+    currentFileHandle = null;
+    returnBackBtn.style.display = '';
+}
+
+returnBackBtn.addEventListener('click', () => {
+    if (!linkSession || !window.opener || window.opener.closed) {
+        showToast(t('link.noReply'), { error: true, duration: 7000 });
+        return;
+    }
+    const bytes = new TextEncoder().encode(currentContent).buffer;
+    returnBackBtn.disabled = true;
+    returnBackLabel.textContent = t('link.sending');
+    window.opener.postMessage(
+        { type: 'mdstudio:resultaat', versie: 1, sessie: linkSession.id, naam: currentFileName, bytes },
+        location.origin, [bytes]
+    );
+});
+
 // Initialize
 I18n.applyTranslations();
 document.title = t('app.name');
 initTheme();
 renderRecentFiles();
 updateViewModeText();
+initTrackerLink();

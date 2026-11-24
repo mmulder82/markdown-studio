@@ -51,6 +51,10 @@ Conversion happens entirely in your own browser. The document is never sent anyw
 - Text boxes and SmartArt are not always included.
 - Password-protected documents cannot be opened.
 
+### Link with the Informatiemanagement tool
+
+When this page is served from the same web address as the [Informatiemanagement tool](https://github.com/mmulder82/informatiemanagement-tool), the **Naar Markdown** button next to a Word attachment opens the document here (`#koppeling`). **Send back** returns the `.md` file as a new attachment on the activity. Messages only travel between windows on exactly the same web address; the document never leaves your browser.
+
 ### Writing and editing
 
 - **New file**: start with an example document.

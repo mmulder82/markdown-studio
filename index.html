@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Studio</title>
+    <!-- Tweede vangnet naast het veilig weergeven van Markdown: geen inline scripts, geen verbindingen naar buiten -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
     <meta name="description" content="Markdown lezen, schrijven en Word-documenten omzetten naar Markdown voor AI. Read and write Markdown, and convert Word documents to Markdown for AI.">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -87,6 +89,13 @@
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                         <span id="view-mode-text"></span>
+                    </button>
+                    <button id="return-back" class="toolbar-button primary" style="display: none;" data-i18n-title="toolbar.returnBackTitle">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 14 4 9 9 4"></polyline>
+                            <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+                        </svg>
+                        <span id="return-back-label" data-i18n="toolbar.returnBack">Terugzetten</span>
                     </button>
                     <button id="save-file" class="toolbar-button primary" data-i18n-title="toolbar.saveTitle">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
